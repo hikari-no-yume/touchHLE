@@ -12,8 +12,8 @@ pub mod ui_alert_view;
 pub mod ui_control;
 pub mod ui_image_view;
 pub mod ui_label;
+pub mod ui_scroll_view;
 pub mod ui_window;
-
 use super::ui_graphics::{UIGraphicsPopContext, UIGraphicsPushContext};
 use crate::frameworks::core_graphics::cg_affine_transform::CGAffineTransform;
 use crate::frameworks::core_graphics::cg_context::{CGContextClearRect, CGContextRef};
@@ -171,6 +171,15 @@ pub const CLASSES: ClassExports = objc_classes! {
 - (bool)isUserInteractionEnabled {
     env.objc.borrow::<UIViewHostObject>(this).user_interaction_enabled
 }
+
+- (())setContentMode:(id) _mode {
+
+}
+
+- (())setAutoresizingMask:(id) _mask {
+
+}
+
 - (())setUserInteractionEnabled:(bool)enabled {
     env.objc.borrow_mut::<UIViewHostObject>(this).user_interaction_enabled = enabled;
 }
@@ -452,7 +461,6 @@ pub const CLASSES: ClassExports = objc_classes! {
     let other_layer = env.objc.borrow::<UIViewHostObject>(other).layer;
     msg![env; this_layer convertPoint:point toLayer:other_layer]
 }
-
 @end
 
 };
