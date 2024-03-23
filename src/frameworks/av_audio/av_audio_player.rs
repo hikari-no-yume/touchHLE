@@ -20,7 +20,7 @@ use crate::frameworks::audio_toolbox::audio_queue::{
 use crate::frameworks::carbon_core::eofErr;
 use crate::frameworks::core_audio_types::AudioStreamBasicDescription;
 use crate::frameworks::core_foundation::cf_run_loop::kCFRunLoopCommonModes;
-use crate::frameworks::foundation::ns_string;
+use crate::frameworks::foundation::{ns_string, NSInteger, NSTimeInterval};
 use crate::mem::{guest_size_of, GuestUSize, MutPtr, MutVoidPtr, Ptr};
 use crate::msg;
 use crate::objc::{id, nil, release, retain, Class, ClassExports, HostObject, NSZonePtr};
@@ -71,8 +71,7 @@ pub const CLASSES: ClassExports = objc_classes! {
     env.objc.alloc_object(this, host_object, &mut env.mem)
 }
 
-- (id)initWithContentsOfURL:(id)url error:(id)error {
-    assert!(error.is_null());
+- (id)initWithContentsOfURL:(id)url error:(id)_error {
     let path: id = msg![env; url path];
     let path_str = ns_string::to_rust_string(env, path);
     log_dbg!("initWithContentsOfURL: {}", path_str);
@@ -81,6 +80,9 @@ pub const CLASSES: ClassExports = objc_classes! {
 
     let host_object = env.objc.borrow_mut::<AVAudioPlayerHostObject>(this);
     host_object.audio_file_url = url;
+
+    // TODO: Check for errors, return nil and write them to error if there are
+
     this
 }
 
@@ -229,6 +231,19 @@ pub const CLASSES: ClassExports = objc_classes! {
     let url = env.objc.borrow_mut::<AVAudioPlayerHostObject>(this).audio_file_url;
     release(env, url);
     env.objc.dealloc_object(this, &mut env.mem)
+}
+
+- (())setNumberOfLoops:(NSInteger)numberOfLoops {
+    log!("TODO: [(AVAudioPlayer *) {:?} setNumberOfLoops:{:?}]", this, numberOfLoops);
+}
+
+- (NSTimeInterval)currentTime {
+    let result = 0.0;
+    log!("TODO: [(AVAudioPlayer *) {:?} currentTime] -> {:?}", this, result);
+    result
+}
+- (())setCurrentTime:(NSTimeInterval)currentTime {
+    log!("TODO: [(AVAudioPlayer *) {:?} setCurrentTime: {}]", this, currentTime);
 }
 
 @end
