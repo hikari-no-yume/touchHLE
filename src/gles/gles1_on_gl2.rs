@@ -70,6 +70,10 @@ pub const CAPABILITIES: &[GLenum] = &[
     gl21::POINT_SPRITE,
 ];
 
+pub const UNSUPPORTED_CAPABILITIES: &[GLenum] = &[
+    0x8620, // GL_VERTEX_PROGRAM_NV
+];
+
 pub struct ArrayInfo {
     /// Enum used by `glEnableClientState`, `glDisableClientState` and
     /// `glGetBoolean`.
@@ -310,6 +314,11 @@ const LIGHT_PARAMS: ParamTable = ParamTable(&[
     (gl21::CONSTANT_ATTENUATION, ParamType::Float, 1),
     (gl21::LINEAR_ATTENUATION, ParamType::Float, 1),
     (gl21::QUADRATIC_ATTENUATION, ParamType::Float, 1),
+]);
+
+const LIGHT_MODEL_PARAMS: ParamTable = ParamTable(&[
+    (gl21::LIGHT_MODEL_AMBIENT, ParamType::Float, 4),
+    (gl21::LIGHT_MODEL_TWO_SIDE, ParamType::Float, 1),
 ]);
 
 /// Table of `glMaterial` parameters shared by OpenGL ES 1.1 and OpenGL 2.1.
@@ -623,6 +632,8 @@ impl GLES for GLES1OnGL2 {
     unsafe fn Disable(&mut self, cap: GLenum) {
         if ARRAYS.iter().any(|&ArrayInfo { name, .. }| name == cap) {
             log_dbg!("Tolerating glDisable({:#x}) of client state", cap);
+        } else if UNSUPPORTED_CAPABILITIES.contains(&cap) {
+            log_dbg!("Tolerating glDisable({:#x}) of unsupported capability", cap);
         } else {
             assert!(CAPABILITIES.contains(&cap));
         }
@@ -886,10 +897,28 @@ impl GLES for GLES1OnGL2 {
         )
     }
     unsafe fn LightModelf(&mut self, pname: GLenum, param: GLfloat) {
+        LIGHT_MODEL_PARAMS.assert_component_count(pname, 1);
         gl21::LightModelf(pname, param)
     }
+    unsafe fn LightModelx(&mut self, pname: GLenum, param: GLfixed) {
+        LIGHT_MODEL_PARAMS.setx(
+            |param| gl21::LightModelf(pname, param),
+            |_| unreachable!(),
+            pname,
+            param,
+        )
+    }
     unsafe fn LightModelfv(&mut self, pname: GLenum, params: *const GLfloat) {
+        LIGHT_MODEL_PARAMS.assert_known_param(pname);
         gl21::LightModelfv(pname, params)
+    }
+    unsafe fn LightModelxv(&mut self, pname: GLenum, params: *const GLfixed) {
+        LIGHT_MODEL_PARAMS.setxv(
+            |param| gl21::LightModelfv(pname, param),
+            |_| unreachable!(),
+            pname,
+            params,
+        )
     }
     unsafe fn Materialf(&mut self, face: GLenum, pname: GLenum, param: GLfloat) {
         assert!(face == gl21::FRONT_AND_BACK);

@@ -52,6 +52,10 @@ fn time(env: &mut Environment, out: MutPtr<time_t>) -> time_t {
     time
 }
 
+fn tzset(_env: &mut Environment) {
+    log!("TODO: tzset()");
+}
+
 #[allow(non_camel_case_types)]
 #[repr(C, packed)]
 #[derive(Copy, Clone, Debug)]
@@ -281,8 +285,9 @@ struct timeval {
 unsafe impl SafeRead for timeval {}
 
 #[allow(non_camel_case_types)]
+#[derive(Default)]
 #[repr(C, packed)]
-struct timespec {
+pub struct timespec {
     tv_sec: time_t,
     tv_nsec: i32,
 }
@@ -346,6 +351,7 @@ fn nanosleep(env: &mut Environment, rqtp: ConstPtr<timespec>, _rmtp: MutPtr<time
 pub const FUNCTIONS: FunctionExports = &[
     export_c_func!(clock()),
     export_c_func!(time(_)),
+    export_c_func!(tzset()),
     export_c_func!(gmtime_r(_, _)),
     export_c_func!(gmtime(_)),
     export_c_func!(localtime_r(_, _)),

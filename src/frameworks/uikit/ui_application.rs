@@ -72,7 +72,9 @@ pub const CLASSES: ClassExports = objc_classes! {
     let old_delegate = std::mem::replace(&mut host_object.delegate, delegate);
     if host_object.delegate_is_retained {
         host_object.delegate_is_retained = false;
-        release(env, old_delegate);
+        if delegate != old_delegate {
+            release(env, old_delegate);
+        }
     }
 }
 
@@ -155,6 +157,16 @@ pub const CLASSES: ClassExports = objc_classes! {
     }
     let windows = ns_array::from_vec(env, visible_windows);
     autorelease(env, windows)
+}
+
+// UIResponder implementation
+// From the Apple UIView docs regarding [UIResponder nextResponder]:
+// "The shared UIApplication object normally returns nil, but it returns its
+//  app delegate if that object is a subclass of UIResponder and hasn’t
+//  already been called to handle the event."
+// TODO: The latter part
+- (id)nextResponder {
+    nil
 }
 
 @end
